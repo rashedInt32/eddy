@@ -25,6 +25,21 @@ const vec3 RAMP[16] = vec3[16](
   vec3(0.5451, 0.4392, 0.9412)
 );
 
+// glow colours: when there are any, each glowing dot draws one at random
+// for that breath, so neighbours glow in different hues (prism). Empty for
+// a palette whose glows stay in its own ramp.
+const int SPARK_COUNT = 8;
+const vec3 SPARKS[8] = vec3[8](
+  vec3(0.3020, 0.5882, 1.0000),
+  vec3(0.2627, 0.7098, 0.5059),
+  vec3(1.0000, 0.4196, 0.4196),
+  vec3(0.8863, 0.5608, 0.1647),
+  vec3(0.5490, 0.4353, 0.9412),
+  vec3(0.1961, 1.0000, 0.4941),
+  vec3(1.0000, 0.9490, 0.0000),
+  vec3(0.3059, 0.7059, 0.8275)
+);
+
 const float ALPHA = 0.3;   // opacity of a lit dot over the background
 const float SPEED = 0.06;   // field drift, in field units per second
 const float SCALE = 2.2;   // eddies per screen height, roughly
@@ -143,13 +158,21 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   // life: every dot breathes slowly on its own phase, and for a moment at
   // the top of each breath a few of them glow
-  float breath = 0.5 + 0.5 * sin(iTime * (0.4 + 0.6 * draw2) + draw * 6.2831);
+  float phase = iTime * (0.4 + 0.6 * draw2) + draw * 6.2831;
+  float breath = 0.5 + 0.5 * sin(phase);
   float glow = smoothstep(0.9, 1.0, breath) * step(0.5, draw2);
   float level = 0.5 + 0.5 * breath;
   float intensity = lit * disc * (level + 1.2 * glow);
 
   // muted: the ramp's lower middle; a glowing dot climbs a little higher
   vec3 col = ramp(0.25 + 0.25 * ridge + 0.3 * glow);
+  if (SPARK_COUNT > 0) {
+    // a fresh colour each breath: hash the dot with its breath count
+    float cycle = floor((phase + 1.5708) / 6.2831);
+    float pick = fract(sin(dot(vec3(cell, cycle), vec3(7.13, 157.31, 113.5))) * 53758.5453);
+    vec3 spark = SPARKS[int(pick * float(SPARK_COUNT)) % SPARK_COUNT];
+    col = mix(ramp(0.2 + 0.2 * ridge), spark, glow);
+  }
   vec3 outS = mix(rgbS, col, clamp(isBg * ALPHA * intensity, 0.0, 1.0));
   fragColor = vec4(linearTex ? toLinear(outS) : outS, term.a);
 }

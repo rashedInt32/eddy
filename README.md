@@ -51,7 +51,9 @@ that still show the terminal's background colour, so glyphs are left exactly
 as rendered. It draws the way the TUI does: small dots on a lattice, lit where
 a filament of the flow passes, in the palette's muted middle. Slow drift, lots
 of dark between the dots, and every dot breathes on its own phase, with a few
-at a time peaking into a brief glow.
+at a time peaking into a brief glow. Under `prism` each glowing dot draws its
+own colour from the starship set for that breath, so neighbours glow in
+different hues over a grey-blue rest.
 
 ![the lagoon shader behind a Claude Code session](shots/shader-lagoon.png)
 
