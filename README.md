@@ -48,8 +48,9 @@ ln -s "$PWD/bin/eddy" ~/.local/bin/eddy
 The same field as a GPU shader that runs behind everything in Ghostty, including
 Claude Code, tmux and nvim, without touching any of them. It tints only pixels
 that still show the terminal's background colour, so glyphs are left exactly
-as rendered. It is tuned to read as a shadow: thin filaments, slow drift, low
-opacity.
+as rendered. It draws the way the TUI does: small dots on a lattice, lit where
+a filament of the flow passes, in the palette's muted middle. Slow drift, lots
+of dark between the dots.
 
 ![the lagoon shader behind a Claude Code session](shots/shader-lagoon.png)
 
@@ -61,8 +62,9 @@ custom-shader-animation = true
 ```
 
 One file per palette lives in `shaders/`. Knobs sit at the top of each file:
-`ALPHA` is how visible it is, `SPEED` how fast it drifts, `SCALE` how many
-eddies fit on screen. Edit the template in `scripts/shader-template.glsl` and
+`ALPHA` is how bright a lit dot is, `SPARSE` how much of each filament stays
+dark, `PITCH` how fine the dot lattice is, `SPEED` how fast it drifts, `SCALE`
+how many eddies fit on screen. Edit the template in `scripts/shader-template.glsl` and
 run `bun run shaders` to rebuild all ten.
 
 Things to know:

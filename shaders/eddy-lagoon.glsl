@@ -25,10 +25,13 @@ const vec3 RAMP[16] = vec3[16](
   vec3(0.4431, 0.9059, 0.8980)
 );
 
-const float ALPHA = 0.13;   // peak opacity of the field over the background
-const float SPEED = 0.035;   // field drift, in field units per second
+const float ALPHA = 0.4;   // opacity of a lit dot over the background
+const float SPEED = 0.03;   // field drift, in field units per second
 const float SCALE = 2.2;   // eddies per screen height, roughly
-const int   STEPS = 8;           // advection steps behind each pixel
+const float PITCH = 170.0;   // dot rows per screen height: the lattice the dots sit on
+const float DOT   = 0.19;        // dot radius as a fraction of the pitch
+const float SPARSE = 0.55; // 0..1, how much of each filament is left unlit
+const int   STEPS = 6;           // advection steps behind each dot
 
 // iq's 2D gradient noise with analytic derivatives: x is the value, yz the gradient
 vec2 hash2(vec2 p) {
@@ -65,7 +68,7 @@ vec2 curl(vec2 p, float t) {
 }
 
 // what the flow carries: a field of small blobs; its zero crossings
-// become the filaments
+// become the filaments the dots trace
 float dye(vec2 p, float t) {
   return noised(p * 4.5 + vec2(t * 0.2, -t * 0.15) + 5.0).x;
 }
@@ -107,10 +110,20 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float isBg = 1.0 - smoothstep(0.01, 0.04, d);
   if (isBg <= 0.0) { fragColor = term; return; }
 
-  vec2 p = (fragCoord - 0.5 * iResolution.xy) / iResolution.y * SCALE;
+  // dots on a lattice, as the braille version draws them: the field is
+  // sampled once per lattice point, and the pixel lights only inside a
+  // small disc around it
+  float pitch = max(3.0, iResolution.y / PITCH);
+  vec2 cell = floor(fragCoord / pitch);
+  vec2 centre = (cell + 0.5) * pitch;
+  float r = length(fragCoord - centre) / pitch;
+  float disc = 1.0 - smoothstep(DOT - 0.05, DOT + 0.05, r);
+  if (disc <= 0.0) { fragColor = term; return; }
+
+  vec2 p = (centre - 0.5 * iResolution.xy) / iResolution.y * SCALE;
   float t = iTime * SPEED;
 
-  // walk back along the flow and gather dye: streaks that follow the current
+  // walk back along the flow from the dot and gather dye
   float acc = 0.0, w = 0.0;
   vec2 q = p;
   for (int i = 0; i < STEPS; i++) {
@@ -121,15 +134,15 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   }
   float v = acc / w;
 
-  // thin filaments where the dye crosses zero, over a very faint wash so
-  // the ground is not dead flat between them
-  float ridge = smoothstep(0.6, 1.0, 1.0 - abs(v) * 5.0);
-  float wash = smoothstep(-0.3, 0.6, v) * 0.12;
-  float intensity = clamp(ridge * 0.9 + wash, 0.0, 1.0);
+  // a dot lights where the dye crosses zero; a stable per-dot draw thins
+  // the filaments into broken dotted lines rather than solid ones
+  float ridge = smoothstep(0.55, 1.0, 1.0 - abs(v) * 5.0);
+  float draw = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+  float lit = ridge * smoothstep(SPARSE - 0.15, SPARSE + 0.15, draw + ridge * 0.25);
+  float intensity = lit * disc;
 
-  // blend in sRGB so ALPHA means the same thing on screen in both modes,
-  // then hand the result back in the texture's own space
-  vec3 col = ramp(intensity);
+  // muted: the ramp's middle, never its bright end
+  vec3 col = ramp(0.3 + 0.35 * ridge);
   vec3 outS = mix(rgbS, col, isBg * ALPHA * intensity);
   fragColor = vec4(linearTex ? toLinear(outS) : outS, term.a);
 }

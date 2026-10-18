@@ -4,7 +4,7 @@
 import { Gradient } from '../src/color'
 import { PALETTES, PALETTE_NAMES } from '../src/palettes'
 
-const TUNING = { alpha: '0.13', speed: '0.035', scale: '2.2', top: 0.8 }
+const TUNING = { alpha: '0.4', speed: '0.03', scale: '2.2', pitch: '170.0', sparse: '0.55', top: 0.8 }
 
 const templateFile = Bun.file(new URL('./shader-template.glsl', import.meta.url))
 
@@ -23,6 +23,8 @@ export async function bake(name: keyof typeof PALETTES): Promise<string> {
     .replace('__ALPHA__', TUNING.alpha)
     .replace('__SPEED__', TUNING.speed)
     .replace('__SCALE__', TUNING.scale)
+    .replace('__PITCH__', TUNING.pitch)
+    .replace('__SPARSE__', TUNING.sparse)
 }
 
 if (import.meta.main) {
