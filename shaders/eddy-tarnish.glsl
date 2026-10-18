@@ -39,6 +39,8 @@ const float SCALE = 2.2;   // eddies per screen height, roughly
 const float PITCH = 170.0;   // dot rows per screen height: the lattice the dots sit on
 const float DOT   = 0.19;        // dot radius as a fraction of the pitch
 const float SPARSE = 0.55; // 0..1, how much of each filament is left unlit
+const float REST  = 1.0;   // brightness of a resting dot, 0 hides the lattice and leaves only the glows
+const float SHARE = 0.5;  // 0..1, the share of dots that ever glow
 const int   STEPS = 6;           // advection steps behind each dot
 
 // iq's 2D gradient noise with analytic derivatives: x is the value, yz the gradient
@@ -153,8 +155,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // the top of each breath a few of them glow
   float phase = iTime * (0.4 + 0.6 * draw2) + draw * 6.2831;
   float breath = 0.5 + 0.5 * sin(phase);
-  float glow = smoothstep(0.9, 1.0, breath) * step(0.5, draw2);
-  float level = 0.5 + 0.5 * breath;
+  float glow = smoothstep(0.9, 1.0, breath) * step(1.0 - SHARE, draw2);
+  float level = REST * (0.5 + 0.5 * breath);
   float intensity = lit * disc * (level + 1.2 * glow);
 
   // muted: the ramp's lower middle; a glowing dot climbs a little higher

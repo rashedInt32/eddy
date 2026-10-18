@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import { bake } from '../scripts/shaders'
+import { bake, LOOKS } from '../scripts/shaders'
 import { PALETTE_NAMES } from '../src/palettes'
 
 test('every palette bakes a shader with a full 16-step ramp and no placeholders left', async () => {
@@ -12,6 +12,11 @@ test('every palette bakes a shader with a full 16-step ramp and no placeholders 
     expect(glsl).toContain('void mainImage(out vec4 fragColor, in vec2 fragCoord)')
     expect(glsl).toContain('iBackgroundColor')
     expect(glsl).toContain(`the ${name} ramp`)
+    expect(glsl).toContain('const float REST  = 1.0;')
+    const glow = await bake(name, '-glow')
+    expect(glow).toContain('const float REST  = 0.0;')
+    expect(glow).toContain(`the ${name} (glow-only) ramp`)
+    expect(Object.keys(LOOKS)).toEqual(['', '-glow'])
     // the ramp climbs: the last stop is brighter than the first
     const ramp = glsl.slice(glsl.indexOf('RAMP[16]'))
     const rows = [...ramp.matchAll(/vec3\(([\d.]+), ([\d.]+), ([\d.]+)\)/g)].map(m => +m[1] + +m[2] + +m[3])

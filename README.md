@@ -48,27 +48,38 @@ ln -s "$PWD/bin/eddy" ~/.local/bin/eddy
 The same field as a GPU shader that runs behind everything in Ghostty, including
 Claude Code, tmux and nvim, without touching any of them. It tints only pixels
 that still show the terminal's background colour, so glyphs are left exactly
-as rendered. It draws the way the TUI does: small dots on a lattice, lit where
-a filament of the flow passes, in the palette's muted middle. Slow drift, lots
-of dark between the dots, and every dot breathes on its own phase, with a few
-at a time peaking into a brief glow. Under `prism` each glowing dot draws its
-own colour from the starship set for that breath, so neighbours glow in
-different hues over a grey-blue rest.
+as rendered. Dots sit on a lattice as fine as braille; each breathes on its own
+slow phase, and at the top of a breath a few at a time glow. Under `prism` every
+glow draws its own colour from the starship set, so neighbours sparkle in
+different hues.
 
-![the prism shader behind a Claude Code session](shots/shader-prism.png)
+Two looks, chosen by file name. The glow-only look is the quiet one: a plain
+ground where sparkles appear, peak and fade along the invisible flow.
+
+![the glow-only prism shader behind a Claude Code session](shots/shader-prism-glow.png)
+
+The lattice look keeps a dim grid of resting dots that trace the flow, with
+the same glows on top.
+
+![the lattice prism shader behind a Claude Code session](shots/shader-prism.png)
 
 Add to `~/.config/ghostty/config` and reload (`super+shift+r` here):
 
 ```
-custom-shader = /path/to/eddy/shaders/eddy-prism.glsl
+custom-shader = /path/to/eddy/shaders/eddy-prism-glow.glsl
 custom-shader-animation = true
 ```
 
-One file per palette lives in `shaders/`. Knobs sit at the top of each file:
-`ALPHA` is how bright a lit dot is, `SPARSE` how much of each filament stays
-dark, `PITCH` how fine the dot lattice is, `SPEED` how fast it drifts, `SCALE`
-how many eddies fit on screen. Edit the template in `scripts/shader-template.glsl` and
-run `bun run shaders` to rebuild all ten.
+Drop `-glow` from the file name for the lattice look. Swap `prism` for any of
+the ten palette names. Two files per palette live in `shaders/`.
+
+Knobs sit at the top of each file and take effect on the next reload, no
+rebuild needed: `ALPHA` is how bright a lit dot is, `REST` how bright a
+resting dot is (0 is the glow-only look, 1 the lattice), `SHARE` how many
+dots ever glow, `SPARSE` how much of each filament stays dark, `PITCH` how
+fine the dot lattice is, `SPEED` how fast it drifts, `SCALE` how many eddies
+fit on screen. To change the template for every file, edit
+`scripts/shader-template.glsl` and run `bun run shaders`.
 
 Things to know:
 
@@ -82,14 +93,15 @@ Things to know:
   linear-light texture under `linear` and `linear-corrected` but an sRGB
   background uniform; the shader detects which space the texture is in per
   pixel, compares in sRGB, and blends in sRGB, so the field looks the same
-  either way. `bun scripts/preview.ts` checks both: add `&linear=1`.
+  either way.
 - Anti-aliased glyph fringes within about 10/255 of the background are tinted
   along with the background, which is what keeps glyphs from getting a halo.
   Anything brighter than that is untouched.
 
-`bun scripts/preview.ts` serves a browser stand-in at `localhost:8765/?p=lagoon`
-that runs the shader over a fake terminal and reports how many glyph pixels
-changed and how much of the background was tinted.
+`bun scripts/preview.ts` serves a browser stand-in at `localhost:8765/?p=prism`
+that runs a shader over a fake terminal and reports how many glyph pixels
+changed and how much of the background was tinted. Add `&look=-glow` for the
+glow-only file and `&linear=1` to test the linear-light texture.
 
 ## palettes
 

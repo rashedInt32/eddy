@@ -2,7 +2,7 @@
 // some text) into a texture, runs a baked shader over it with the Shadertoy
 // uniforms Ghostty provides, and reports how many glyph pixels changed.
 //   bun scripts/preview.ts            then open http://localhost:8765/?p=lagoon
-import { bake } from './shaders'
+import { bake, LOOKS, type Look } from './shaders'
 import { PALETTE_NAMES, isPaletteName } from '../src/palettes'
 
 const PORT = 8765
@@ -104,7 +104,9 @@ Bun.serve({
     const url = new URL(req.url)
     const p = url.searchParams.get('p') ?? 'lagoon'
     if (!isPaletteName(p)) return new Response(`unknown palette; one of ${PALETTE_NAMES.join(', ')}`, { status: 400 })
-    return new Response(page(p, await bake(p), url.searchParams.get('linear') === '1'), { headers: { 'content-type': 'text/html; charset=utf-8' } })
+    const look = (url.searchParams.get('look') ?? '') as Look
+    if (!(look in LOOKS)) return new Response('look is one of: lattice (default) or glow', { status: 400 })
+    return new Response(page(p, await bake(p, look), url.searchParams.get('linear') === '1'), { headers: { 'content-type': 'text/html; charset=utf-8' } })
   },
 })
 console.log(`eddy preview on http://localhost:${PORT}/?p=lagoon`)

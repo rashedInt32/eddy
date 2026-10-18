@@ -12,9 +12,18 @@ const SPARKS: Partial<Record<PaletteName, string[]>> = {
 
 const TUNING = { alpha: '0.3', speed: '0.06', scale: '2.2', pitch: '170.0', sparse: '0.55', top: 0.8 }
 
+// two looks per palette, chosen in Ghostty by file name: `eddy-<palette>.glsl`
+// keeps a dim lattice of resting dots with glows on top; `eddy-<palette>-glow.glsl`
+// hides the lattice and shows only the glows
+export const LOOKS = {
+  '': { rest: '1.0', share: '0.5' },
+  '-glow': { rest: '0.0', share: '0.8' },
+} as const
+export type Look = keyof typeof LOOKS
+
 const templateFile = Bun.file(new URL('./shader-template.glsl', import.meta.url))
 
-export async function bake(name: keyof typeof PALETTES): Promise<string> {
+export async function bake(name: keyof typeof PALETTES, look: Look = ''): Promise<string> {
   const template = await templateFile.text()
   const g = new Gradient(PALETTES[name].stops, 64)
   const rows: string[] = []
@@ -30,7 +39,7 @@ export async function bake(name: keyof typeof PALETTES): Promise<string> {
     return `  vec3(${f(r)}, ${f(gg)}, ${f(b)})${i < arr.length - 1 ? ',' : ''}`
   })
   return template
-    .replace('__PALETTE__', name)
+    .replace('__PALETTE__', name + (look ? ' (glow-only)' : ''))
     .replace('__SPARK_COUNT__', String(sparks.length))
     .replace(/__SPARK_SIZE__/g, String(Math.max(1, sparks.length)))
     .replace('__SPARKS__', sparkRows.join('\n'))
@@ -40,11 +49,15 @@ export async function bake(name: keyof typeof PALETTES): Promise<string> {
     .replace('__SCALE__', TUNING.scale)
     .replace('__PITCH__', TUNING.pitch)
     .replace('__SPARSE__', TUNING.sparse)
+    .replace('__REST__', LOOKS[look].rest)
+    .replace('__SHARE__', LOOKS[look].share)
 }
 
 if (import.meta.main) {
   for (const name of PALETTE_NAMES) {
-    await Bun.write(`shaders/eddy-${name}.glsl`, await bake(name))
-    console.log(`shaders/eddy-${name}.glsl`)
+    for (const look of Object.keys(LOOKS) as Look[]) {
+      await Bun.write(`shaders/eddy-${name}${look}.glsl`, await bake(name, look))
+      console.log(`shaders/eddy-${name}${look}.glsl`)
+    }
   }
 }
