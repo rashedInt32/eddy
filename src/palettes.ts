@@ -1,6 +1,6 @@
 // Each ramp runs dark to bright: the palette's card tint, its rule grey, then
 // its secondary, its lead, and its heading white. The hexes are glass's
-// (~/Documents/codes/packages/glass/hooks/palette.ts); the ramps are eddy's.
+// (github.com/rashedInt32/glass, hooks/palette.ts); the ramps are eddy's.
 
 export type PaletteName =
   | 'lagoon' | 'iris' | 'tarnish' | 'overprint' | 'ironbow'
