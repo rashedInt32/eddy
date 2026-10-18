@@ -10,7 +10,9 @@
     "start": "bun src/main.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "shots": "bun scripts/shots.ts"
+    "shots": "bun scripts/shots.ts",
+    "shaders": "bun scripts/shaders.ts",
+    "preview": "bun scripts/preview.ts"
   },
   "license": "MIT",
   "devDependencies": {

@@ -43,6 +43,44 @@ ln -s "$PWD/bin/eddy" ~/.local/bin/eddy
   the colour changes along a row. A 200x50 terminal costs about half a
   millisecond per frame.
 
+## under the terminal: the Ghostty shader
+
+The same field as a GPU shader that runs behind everything in Ghostty, including
+Claude Code, tmux and nvim, without touching any of them. It tints only pixels
+that still show the terminal's background colour, so glyphs are left exactly
+as rendered. It is tuned to read as a shadow: thin filaments, slow drift, low
+opacity.
+
+![the lagoon shader behind a Claude Code session](shots/shader-lagoon.png)
+
+Add to `~/.config/ghostty/config` and reload (`super+shift+r` here):
+
+```
+custom-shader = ~/Documents/codes/packages/eddy/shaders/eddy-lagoon.glsl
+custom-shader-animation = true
+```
+
+One file per palette lives in `shaders/`. Knobs sit at the top of each file:
+`ALPHA` is how visible it is, `SPEED` how fast it drifts, `SCALE` how many
+eddies fit on screen. Edit the template in `scripts/shader-template.glsl` and
+run `bun run shaders` to rebuild all ten.
+
+Things to know:
+
+- `custom-shader-animation` must be `true` for motion. `always` keeps it moving
+  when the window is unfocused, at some CPU cost. `false` means it only
+  redraws when the terminal does.
+- The shader applies to the whole Ghostty window, every tab and pane.
+- It reads Ghostty's `iBackgroundColor` uniform, so it needs Ghostty 1.2 or
+  newer and follows whatever theme you use.
+- Anti-aliased glyph fringes within about 10/255 of the background are tinted
+  along with the background, which is what keeps glyphs from getting a halo.
+  Anything brighter than that is untouched.
+
+`bun scripts/preview.ts` serves a browser stand-in at `localhost:8765/?p=lagoon`
+that runs the shader over a fake terminal and reports how many glyph pixels
+changed and how much of the background was tinted.
+
 ## palettes
 
 The hexes are glass's own; the ramps are eddy's. Same seed, same frame.
