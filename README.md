@@ -55,12 +55,12 @@ at a time peaking into a brief glow. Under `prism` each glowing dot draws its
 own colour from the starship set for that breath, so neighbours glow in
 different hues over a grey-blue rest.
 
-![the lagoon shader behind a Claude Code session](shots/shader-lagoon.png)
+![the prism shader behind a Claude Code session](shots/shader-prism.png)
 
 Add to `~/.config/ghostty/config` and reload (`super+shift+r` here):
 
 ```
-custom-shader = ~/Documents/codes/packages/eddy/shaders/eddy-lagoon.glsl
+custom-shader = /path/to/eddy/shaders/eddy-prism.glsl
 custom-shader-animation = true
 ```
 
