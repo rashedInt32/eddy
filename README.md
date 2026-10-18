@@ -1,0 +1,78 @@
+# eddy
+
+A flow field for the terminal, drawn in my [glass](https://github.com/rashedInt32/glass) palettes.
+
+Particles drift through a slowly turning curl-noise field and leave fading
+trails, packed into braille dots and coloured along an OKLab ramp built from
+one of the palettes. Zero dependencies, Bun + TypeScript, runs in tmux.
+
+![eddy in the lagoon palette](shots/lagoon.svg)
+
+## run
+
+```sh
+bun src/main.ts                 # lagoon
+bun src/main.ts -p ironbow      # one of: lagoon iris tarnish overprint ironbow tidepool water crimson tangerine prism
+bun src/main.ts -c 20           # move to the next palette every 20 s
+bun src/main.ts --once          # print one frame and exit
+bun src/main.ts --once --svg frame.svg
+```
+
+Keys: `q` or `esc` quits, `space` pauses, `n` / `p` or the arrows change the
+palette, `+` / `-` change the particle count, `r` reseeds the field.
+
+To have it on your path:
+
+```sh
+ln -s "$PWD/bin/eddy" ~/.local/bin/eddy
+```
+
+## how it draws
+
+- The field is the curl of two octaves of 3D simplex noise, so the flow is
+  divergence-free: particles swirl in eddies and never pile up into sinks.
+  The third noise axis is time, so the eddies themselves wander.
+- Each particle deposits its head into an intensity grid at two dots per
+  column and four per row. The grid fades a little every tick; that is the
+  trail.
+- A cell lights the dots above a threshold and takes the colour of its
+  brightest dot, read off a 64-step ramp interpolated in OKLab between the
+  palette's card tint, its rule grey, its secondary, its lead and its heading
+  white. OKLab keeps a cyan-to-pink ramp from dipping through grey.
+- A frame is one string, written in one call, with a colour code only where
+  the colour changes along a row. A 200x50 terminal costs about half a
+  millisecond per frame.
+
+## palettes
+
+The hexes are glass's own; the ramps are eddy's. Same seed, same frame.
+
+<table>
+<tr><td><img src="shots/iris.svg" alt="iris"></td><td><img src="shots/tarnish.svg" alt="tarnish"></td></tr>
+<tr><td align="center">iris</td><td align="center">tarnish</td></tr>
+<tr><td><img src="shots/overprint.svg" alt="overprint"></td><td><img src="shots/ironbow.svg" alt="ironbow"></td></tr>
+<tr><td align="center">overprint</td><td align="center">ironbow</td></tr>
+<tr><td><img src="shots/tidepool.svg" alt="tidepool"></td><td><img src="shots/water.svg" alt="water"></td></tr>
+<tr><td align="center">tidepool</td><td align="center">water</td></tr>
+<tr><td><img src="shots/crimson.svg" alt="crimson"></td><td><img src="shots/tangerine.svg" alt="tangerine"></td></tr>
+<tr><td align="center">crimson</td><td align="center">tangerine</td></tr>
+<tr><td><img src="shots/prism.svg" alt="prism"></td><td></td></tr>
+<tr><td align="center">prism</td><td></td></tr>
+</table>
+
+Regenerate the gallery with `bun run shots`.
+
+## develop
+
+```sh
+bun test
+bun run typecheck
+```
+
+## credit
+
+Claude built this unprompted when I asked it to make whatever it wanted.
+The simplex noise follows Stefan Gustavson's public-domain reference; the
+OKLab conversion is Björn Ottosson's.
+
+MIT

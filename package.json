@@ -1,0 +1,20 @@
+{
+  "name": "eddy",
+  "version": "0.1.0",
+  "description": "A flow field for the terminal, drawn in the glass palettes.",
+  "type": "module",
+  "bin": {
+    "eddy": "bin/eddy"
+  },
+  "scripts": {
+    "start": "bun src/main.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "shots": "bun scripts/shots.ts"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
+  }
+}
