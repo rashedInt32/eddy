@@ -77,14 +77,33 @@ vec3 ramp(float x) {
   return mix(RAMP[i], RAMP[j], fract(s));
 }
 
+// sRGB transfer, both ways. Ghostty hands the shader its texture in the
+// configured blending space: sRGB under `alpha-blending = native`, linear
+// under `linear` and `linear-corrected`. iBackgroundColor is always plain
+// sRGB, so the space is detected per pixel below rather than assumed.
+vec3 toLinear(vec3 c) {
+  return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
+}
+vec3 toSrgb(vec3 c) {
+  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec2 uv = fragCoord / iResolution.xy;
   vec4 term = texture(iChannel0, uv);
   vec3 bg = iBackgroundColor;
+  vec3 bgLin = toLinear(bg);
 
-  // 1 where the pixel is the plain background, 0 on glyphs, cursor, selection.
-  // The texture may be premultiplied by background-opacity, so test both.
-  float d = min(distance(term.rgb, bg), distance(term.rgb, bg * term.a));
+  // which space is the texture in? the plain background matches one of them
+  // (premultiplied by background-opacity or not); glyphs match neither and
+  // are passed through either way
+  float dS = min(distance(term.rgb, bg), distance(term.rgb, bg * term.a));
+  float dL = min(distance(term.rgb, bgLin), distance(term.rgb, bgLin * term.a));
+  bool linearTex = dL < dS;
+
+  // compare in sRGB so the glyph tolerance means the same in both modes
+  vec3 rgbS = linearTex ? toSrgb(term.rgb) : term.rgb;
+  float d = min(distance(rgbS, bg), distance(rgbS, bg * term.a));
   float isBg = 1.0 - smoothstep(0.01, 0.04, d);
   if (isBg <= 0.0) { fragColor = term; return; }
 
@@ -108,7 +127,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float wash = smoothstep(-0.3, 0.6, v) * 0.12;
   float intensity = clamp(ridge * 0.9 + wash, 0.0, 1.0);
 
+  // blend in sRGB so ALPHA means the same thing on screen in both modes,
+  // then hand the result back in the texture's own space
   vec3 col = ramp(intensity);
-  vec3 outRgb = mix(term.rgb, col, isBg * ALPHA * intensity);
-  fragColor = vec4(outRgb, term.a);
+  vec3 outS = mix(rgbS, col, isBg * ALPHA * intensity);
+  fragColor = vec4(linearTex ? toLinear(outS) : outS, term.a);
 }

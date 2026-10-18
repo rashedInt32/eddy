@@ -73,6 +73,11 @@ Things to know:
 - The shader applies to the whole Ghostty window, every tab and pane.
 - It reads Ghostty's `iBackgroundColor` uniform, so it needs Ghostty 1.2 or
   newer and follows whatever theme you use.
+- It works under every `alpha-blending` mode. Ghostty hands the shader a
+  linear-light texture under `linear` and `linear-corrected` but an sRGB
+  background uniform; the shader detects which space the texture is in per
+  pixel, compares in sRGB, and blends in sRGB, so the field looks the same
+  either way. `bun scripts/preview.ts` checks both: add `&linear=1`.
 - Anti-aliased glyph fringes within about 10/255 of the background are tinted
   along with the background, which is what keeps glyphs from getting a halo.
   Anything brighter than that is untouched.
