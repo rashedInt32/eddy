@@ -50,7 +50,8 @@ Claude Code, tmux and nvim, without touching any of them. It tints only pixels
 that still show the terminal's background colour, so glyphs are left exactly
 as rendered. It draws the way the TUI does: small dots on a lattice, lit where
 a filament of the flow passes, in the palette's muted middle. Slow drift, lots
-of dark between the dots.
+of dark between the dots, and every dot breathes on its own phase, with a few
+at a time peaking into a brief glow.
 
 ![the lagoon shader behind a Claude Code session](shots/shader-lagoon.png)
 

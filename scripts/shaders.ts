@@ -4,7 +4,7 @@
 import { Gradient } from '../src/color'
 import { PALETTES, PALETTE_NAMES } from '../src/palettes'
 
-const TUNING = { alpha: '0.4', speed: '0.03', scale: '2.2', pitch: '170.0', sparse: '0.55', top: 0.8 }
+const TUNING = { alpha: '0.3', speed: '0.06', scale: '2.2', pitch: '170.0', sparse: '0.55', top: 0.8 }
 
 const templateFile = Bun.file(new URL('./shader-template.glsl', import.meta.url))
 

@@ -25,8 +25,8 @@ const vec3 RAMP[16] = vec3[16](
   vec3(0.4431, 0.9059, 0.8980)
 );
 
-const float ALPHA = 0.4;   // opacity of a lit dot over the background
-const float SPEED = 0.03;   // field drift, in field units per second
+const float ALPHA = 0.3;   // opacity of a lit dot over the background
+const float SPEED = 0.06;   // field drift, in field units per second
 const float SCALE = 2.2;   // eddies per screen height, roughly
 const float PITCH = 170.0;   // dot rows per screen height: the lattice the dots sit on
 const float DOT   = 0.19;        // dot radius as a fraction of the pitch
@@ -138,11 +138,18 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   // the filaments into broken dotted lines rather than solid ones
   float ridge = smoothstep(0.55, 1.0, 1.0 - abs(v) * 5.0);
   float draw = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+  float draw2 = fract(sin(dot(cell, vec2(39.3468, 11.135))) * 24634.6345);
   float lit = ridge * smoothstep(SPARSE - 0.15, SPARSE + 0.15, draw + ridge * 0.25);
-  float intensity = lit * disc;
 
-  // muted: the ramp's middle, never its bright end
-  vec3 col = ramp(0.3 + 0.35 * ridge);
-  vec3 outS = mix(rgbS, col, isBg * ALPHA * intensity);
+  // life: every dot breathes slowly on its own phase, and for a moment at
+  // the top of each breath a few of them glow
+  float breath = 0.5 + 0.5 * sin(iTime * (0.4 + 0.6 * draw2) + draw * 6.2831);
+  float glow = smoothstep(0.9, 1.0, breath) * step(0.5, draw2);
+  float level = 0.5 + 0.5 * breath;
+  float intensity = lit * disc * (level + 1.2 * glow);
+
+  // muted: the ramp's lower middle; a glowing dot climbs a little higher
+  vec3 col = ramp(0.25 + 0.25 * ridge + 0.3 * glow);
+  vec3 outS = mix(rgbS, col, clamp(isBg * ALPHA * intensity, 0.0, 1.0));
   fragColor = vec4(linearTex ? toLinear(outS) : outS, term.a);
 }
